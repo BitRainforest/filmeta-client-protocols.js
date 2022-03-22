@@ -1,19 +1,71 @@
-# Lotus JS Client - Web Browser Provider
+# @bit-rainforest/filmeta-client-protocols.js
 
-This package contains an implementation of the Lotus JS Client provider interface
-that connects to a [Lotus](https://github.com/filecoin-project/lotus) JSON-RPC
-API endpoint using WebSockets or HTTP.
+![standard-readme compliant](https://img.shields.io/badge/js--lotus--client--provider--browser-fork-yellow.svg?style=flat-square)
+![standard-readme compliant](https://img.shields.io/badge/typescript-v4.5.2-green.svg?style=flat-square)
 
-See [filecoin-shipyard/js-lotus-client](https://github.com/filecoin-shipyard/js-lotus-client)
-for examples that show how to use this provider.
+FilMeta 2.0 RPC api js client protocols. Can use Http or WebSocket.
 
-## License
+## Table of Contents
 
-Licensed under either of
+- [Install](#install)
+  - [CNPM](#cnpm)
+  - [NPM](#npm)
+  - [YARN](#yarn)
+  - [PNPM](#pnpm)
+- [Usage](#usage)
+  - [Introduce](#introduce)
+  - [Function](#function)
+- [Example](#example)
+  - [Javascript](#javascript)
+  - [Typescript](#typescript)
+- [Maintainers](#maintainers)
 
- * Apache 2.0, ([LICENSE-APACHE](LICENSE-APACHE) / http://www.apache.org/licenses/LICENSE-2.0)
- * MIT ([LICENSE-MIT](LICENSE-MIT) / http://opensource.org/licenses/MIT)
+## Install
 
-### Contribution
+### CNPM
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+```
+cnpm i @bit-rainforest/filmeta-client-protocols.js --save
+```
+
+### NPM
+
+```
+npm i @bit-rainforest/filmeta-client-protocols.js --save
+```
+
+### YARN
+
+```
+yarn add @bit-rainforest/filmeta-client-protocols.js
+```
+
+### PNPM
+
+```
+pnpm add @bit-rainforest/filmeta-client-protocols.js
+```
+
+## Usage
+
+### Introduce
+
+### Function
+
+## Example
+
+### Javascript
+
+```javascript
+
+```
+
+### Typescript
+
+```typescript
+
+```
+
+## Maintainers
+
+[@eliassama](https://github.com/eliassama)
