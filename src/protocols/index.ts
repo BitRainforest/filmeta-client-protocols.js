@@ -57,21 +57,47 @@ export class Protocol {
     }
   }
 
-  // FIXME: 根据实际情况做进一步调整
-  send(method: string, params: any[]) {
-    const jsonRpcRequest: JsonRpcV2Request = {
+  getJsonRpcRequest(method: string, params: any[]): JsonRpcV2Request {
+    return {
       jsonrpc: '2.0',
       id: `${`${Date.now()}`.substring(2, 11)}${generateRandomStr(
         RandomType.IntRandom,
-        4,
+        5,
       )}`,
       method,
       params,
     };
+  }
 
+  // FIXME: 根据实际情况做进一步调整
+  send(method: string, params: any[]) {
+    const jsonRpcRequest: JsonRpcV2Request = this.getJsonRpcRequest(
+      method,
+      params,
+    );
     return this.client.send(jsonRpcRequest);
   }
-  // TODO: 增加订阅事件处理
+
+  sendSubscription(
+    method: string,
+    params: any,
+    callback: {
+      func: (result: any) => void;
+      err: (err: JsonRpcV2Error) => void;
+    },
+  ) {
+    const jsonRpcRequest: JsonRpcV2Request = this.getJsonRpcRequest(
+      method,
+      params,
+    );
+    if (this.client instanceof WsClient) {
+      return this.client.sendSubscription(jsonRpcRequest, callback);
+    } else {
+      return Promise.reject(
+        'Subscriptions only supported for WebSocket transport',
+      );
+    }
+  }
 
   create(url?: string, protocolType?: ProtocolType, options?: ProtocolOptions) {
     return new Protocol(

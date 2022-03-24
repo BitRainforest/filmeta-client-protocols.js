@@ -8,16 +8,19 @@ export class WsClient {
   private readonly url: string;
   private readonly options: ProtocolOptions;
   private client!: Ws | WebSocket;
-  private cbPool!: Map<
+  private sendCbPool!: Map<
     string | number,
     [(result: any) => void, (err: JsonRpcV2Error) => void]
   >;
-  // TODO: 增加订阅事件池
+  private subCbPool!: Map<
+    string | number,
+    [(result: any) => void, (err: JsonRpcV2Error) => void]
+  >;
 
   constructor(url: string, options: ProtocolOptions) {
     this.url = format.getTokenUrl(format.getWsUrl(url), options);
     this.options = options;
-    this.cbPool = new Map<
+    this.sendCbPool = new Map<
       string | number,
       [(result: any) => void, (err: JsonRpcV2Error) => void]
     >();
@@ -68,12 +71,12 @@ export class WsClient {
       if (isObjectString(data)) {
         const { id, error, result } = JSON.parse(data);
         // TODO: 更加详细的处理
-        const cbArray = that.cbPool.get(id);
+        const cbArray = that.sendCbPool.get(id);
         if (noEmpArray(cbArray)) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           const [successFunc, failFunc] = cbArray;
-          that.cbPool.delete(id);
+          that.sendCbPool.delete(id);
           if (error) {
             failFunc(error.message);
           } else {
@@ -81,6 +84,20 @@ export class WsClient {
           }
           return;
         }
+
+        const subCbArray = that.subCbPool.get(id);
+        if (noEmpArray(subCbArray)) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          const [successFunc, failFunc] = subCbArray;
+          if (error) {
+            failFunc(error.message);
+          } else {
+            successFunc(result);
+          }
+          return;
+        }
+        // TODO: 取消订阅
       }
       println.error('Invalid RPC response: ', data);
     }
@@ -105,7 +122,7 @@ export class WsClient {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     return new Promise((resolve, reject) => {
       this.client.send(JSON.stringify(rpcRequest));
-      this.cbPool.set(rpcRequest.id, [
+      this.sendCbPool.set(rpcRequest.id, [
         (result: any) => {
           resolve(result);
         },
@@ -116,5 +133,14 @@ export class WsClient {
     });
   }
 
-  // TODO: 增加订阅事件处理
+  sendSubscription(
+    rpcRequest: JsonRpcV2Request,
+    callback: {
+      func: (result: any) => void;
+      err: (err: JsonRpcV2Error) => void;
+    },
+  ) {
+    this.client.send(JSON.stringify(rpcRequest));
+    this.sendCbPool.set(rpcRequest.id, [callback.func, callback.err]);
+  }
 }
