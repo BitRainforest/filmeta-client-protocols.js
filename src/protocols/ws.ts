@@ -47,7 +47,7 @@ export class WsClient {
       this.client = new WebSocket(this.url);
     } else {
       throw exception.error(
-        'Environment exception: detected that the current environment is neither Node.js nor websocket-enabled browser. If you are using a browser, your current browser may not support native WebSockets and window.',
+        '[filmeta-client-protocols.js-Error] Environment exception: detected that the current environment is neither Node.js nor websocket-enabled browser. If you are using a browser, your current browser may not support native WebSockets and window.',
       );
     }
     this.addListen();
@@ -95,7 +95,10 @@ export class WsClient {
           return;
         }
       }
-      println.error('Invalid RPC response: ', data);
+      println.error(
+        '[filmeta-client-protocols.js-Error] Invalid RPC response: ',
+        data,
+      );
     }
 
     if (this.client instanceof Ws) {
@@ -120,6 +123,9 @@ export class WsClient {
   send(rpcRequest: JsonRpcV2Request) {
     return new Promise((resolve, reject) => {
       if (this.client.OPEN !== this.client.readyState) {
+        if (this.destroyed) {
+          reject('[filmeta-client-protocols.js-Error] this connect is closed.');
+        }
         if (this.client instanceof Ws) {
           this.client.on('open', () => {
             resolve(this.send(rpcRequest));
@@ -190,15 +196,24 @@ export class WsClient {
   }
 
   close(code: number) {
+    const {
+      client: { close },
+    } = this;
+    this.destroyed = true;
     switch (this.client.readyState) {
       case this.client.CONNECTING:
-        setTimeout(() => {
-          this.close(code);
-        }, 1000);
+        if (this.client instanceof Ws) {
+          this.client.on('open', () => {
+            close(code);
+          });
+        } else if (this.client instanceof WebSocket) {
+          this.client.addEventListener('open', () => {
+            close(code);
+          });
+        }
         break;
       case this.client.OPEN:
-        this.destroyed = true;
-        this.client.close();
+        this.client.close(code);
         break;
     }
   }

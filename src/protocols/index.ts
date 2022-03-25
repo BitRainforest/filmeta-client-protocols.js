@@ -52,7 +52,7 @@ export class Protocol {
         break;
       default:
         throw exception.error(
-          'Is not a valid protocolType, Please use ProtocolType.HTTP or ProtocolType.WebSocket.',
+          '[filmeta-client-protocols.js-Error] Is not a valid protocolType, Please use ProtocolType.HTTP or ProtocolType.WebSocket.',
         );
     }
   }
@@ -87,7 +87,9 @@ export class Protocol {
     } else {
       return [
         Promise,
-        Promise.reject('Subscriptions only supported for WebSocket transport'),
+        Promise.reject(
+          '[filmeta-client-protocols.js-Error] Subscriptions only supported for WebSocket transport',
+        ),
       ];
     }
   }
