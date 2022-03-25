@@ -67,7 +67,7 @@ export const format = {
     const { auth: { authHeader, token } = {} } = options;
 
     const headerMap = new Map<string, string>([
-      ['Content-Type', 'text/plain;charset=UTF-8'],
+      ['Content-Type', 'application/json'],
       ['Accept', '*/*'],
     ]);
 

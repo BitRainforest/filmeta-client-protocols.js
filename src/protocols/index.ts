@@ -17,7 +17,7 @@ export interface ProtocolOptions {
 
 export interface JsonRpcV2Request {
   jsonrpc: string;
-  id: number | string;
+  id: number;
   method: string;
   params: any[];
 }
@@ -57,21 +57,40 @@ export class Protocol {
     }
   }
 
-  // FIXME: 根据实际情况做进一步调整
-  send(method: string, params: any[]) {
-    const jsonRpcRequest: JsonRpcV2Request = {
+  private static getJsonRpcRequest(
+    method: string,
+    params: any[],
+  ): JsonRpcV2Request {
+    return {
       jsonrpc: '2.0',
-      id: `${`${Date.now()}`.substring(2, 11)}${generateRandomStr(
-        RandomType.IntRandom,
-        4,
-      )}`,
+      id: parseInt(
+        `${`${Date.now()}`.substring(2, 11)}${generateRandomStr(
+          RandomType.IntRandom,
+          4,
+        )}`,
+      ),
       method,
       params,
     };
-
-    return this.client.send(jsonRpcRequest);
   }
-  // TODO: 增加订阅事件处理
+
+  // FIXME: 根据实际情况做进一步调整
+  send(method: string, params: any[]) {
+    return this.client.send(Protocol.getJsonRpcRequest(method, params));
+  }
+
+  sendSubscription(method: string, params: any[]) {
+    if (this.client instanceof WsClient) {
+      return this.client.sendSubscription(
+        Protocol.getJsonRpcRequest(method, params),
+      );
+    } else {
+      return [
+        Promise,
+        Promise.reject('Subscriptions only supported for WebSocket transport'),
+      ];
+    }
+  }
 
   create(url?: string, protocolType?: ProtocolType, options?: ProtocolOptions) {
     return new Protocol(
@@ -79,5 +98,12 @@ export class Protocol {
       protocolType || this.protocolType,
       options || this.options,
     );
+  }
+
+  async destroy(code = 1000) {
+    // List of codes: https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent#Status_codes
+    if (this.client instanceof WsClient) {
+      this.client.close(code);
+    }
   }
 }

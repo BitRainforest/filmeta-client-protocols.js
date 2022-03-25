@@ -3,6 +3,7 @@ import { exception, format, println } from '../utils';
 import { isBrowser, isNode, isObjectString, noEmpArray } from 'comsvr-ast';
 import * as Ws from 'ws';
 import { RawData } from 'ws';
+import { generateRandomStr, RandomType } from 'comsvr-random';
 
 export class WsClient {
   private readonly url: string;
@@ -12,7 +13,11 @@ export class WsClient {
     string | number,
     [(result: any) => void, (err: JsonRpcV2Error) => void]
   >;
-  // TODO: 增加订阅事件池
+  private subPool!: Map<
+    string | number,
+    [(result: any) => void, (err: JsonRpcV2Error) => void]
+  >;
+  private destroyed!: boolean;
 
   constructor(url: string, options: ProtocolOptions) {
     this.url = format.getTokenUrl(format.getWsUrl(url), options);
@@ -21,6 +26,11 @@ export class WsClient {
       string | number,
       [(result: any) => void, (err: JsonRpcV2Error) => void]
     >();
+    this.subPool = new Map<
+      string | number,
+      [(result: any) => void, (err: JsonRpcV2Error) => void]
+    >();
+    this.destroyed = false;
     this.open();
   }
 
@@ -40,25 +50,15 @@ export class WsClient {
         'Environment exception: detected that the current environment is neither Node.js nor websocket-enabled browser. If you are using a browser, your current browser may not support native WebSockets and window.',
       );
     }
+    this.addListen();
+  }
+
+  // **- 内部监听接口 -**
+  private addListen() {
     this.onMessage();
     this.disConnect();
   }
 
-  // *保留*
-  private close() {
-    switch (this.client.readyState) {
-      case this.client.CONNECTING:
-        setTimeout(() => {
-          this.close();
-        }, 1000);
-        break;
-      case this.client.OPEN:
-        this.client.close();
-        break;
-    }
-  }
-
-  // **- 内部监听接口 -**
   private onMessage() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
@@ -67,7 +67,7 @@ export class WsClient {
 
       if (isObjectString(data)) {
         const { id, error, result } = JSON.parse(data);
-        // TODO: 更加详细的处理
+        // FIXME: 更加详细的处理 + 简化代码
         const cbArray = that.cbPool.get(id);
         if (noEmpArray(cbArray)) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -75,7 +75,20 @@ export class WsClient {
           const [successFunc, failFunc] = cbArray;
           that.cbPool.delete(id);
           if (error) {
-            failFunc(error.message);
+            failFunc(error);
+          } else {
+            successFunc(result);
+          }
+          return;
+        }
+
+        const subArray = that.subPool.get(id);
+        if (noEmpArray(subArray)) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          const [successFunc, failFunc] = subArray;
+          if (error) {
+            failFunc(error);
           } else {
             successFunc(result);
           }
@@ -96,25 +109,97 @@ export class WsClient {
 
   private disConnect() {
     this.client.onclose = () => {
-      this.open();
+      if (!this.destroyed) {
+        this.open();
+      }
     };
   }
 
   // **- 外部接口 -**
+  // FIXME: 简化代码
   send(rpcRequest: JsonRpcV2Request) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     return new Promise((resolve, reject) => {
-      this.client.send(JSON.stringify(rpcRequest));
-      this.cbPool.set(rpcRequest.id, [
-        (result: any) => {
-          resolve(result);
-        },
-        (error: JsonRpcV2Error) => {
-          reject(error);
-        },
-      ]);
+      if (this.client.OPEN !== this.client.readyState) {
+        if (this.client instanceof Ws) {
+          this.client.on('open', () => {
+            resolve(this.send(rpcRequest));
+          });
+        } else if (this.client instanceof WebSocket) {
+          this.client.addEventListener('open', () => {
+            resolve(this.send(rpcRequest));
+          });
+        }
+      } else {
+        this.client.send(JSON.stringify(rpcRequest));
+        this.cbPool.set(rpcRequest.id, [
+          (result: any) => {
+            resolve(result);
+          },
+          (error: JsonRpcV2Error) => {
+            reject(error);
+          },
+        ]);
+      }
     });
   }
 
-  // TODO: 增加订阅事件处理
+  sendSubscription(rpcRequest: JsonRpcV2Request) {
+    const promise = new Promise((resolve, reject) => {
+      if (this.client.OPEN !== this.client.readyState) {
+        if (this.client instanceof Ws) {
+          this.client.on('open', () => {
+            resolve(this.sendSubscription(rpcRequest));
+          });
+        } else if (this.client instanceof WebSocket) {
+          this.client.addEventListener('open', () => {
+            resolve(this.sendSubscription(rpcRequest));
+          });
+        }
+      } else {
+        this.client.send(JSON.stringify(rpcRequest));
+        this.subPool.set(rpcRequest.id, [
+          (result: any) => {
+            resolve(result);
+          },
+          (error: JsonRpcV2Error) => {
+            reject(error);
+          },
+        ]);
+      }
+    });
+    async function cancel() {
+      await promise;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.subPool.delete(rpcRequest.id);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.send({
+        id: parseInt(
+          `${`${Date.now()}`.substring(2, 11)}${generateRandomStr(
+            RandomType.IntRandom,
+            4,
+          )}`,
+        ),
+        jsonrpc: '2.0',
+        method: 'xrpc.cancel',
+        params: [rpcRequest.id],
+      });
+    }
+    return [cancel.bind(this), promise];
+  }
+
+  close(code: number) {
+    switch (this.client.readyState) {
+      case this.client.CONNECTING:
+        setTimeout(() => {
+          this.close(code);
+        }, 1000);
+        break;
+      case this.client.OPEN:
+        this.destroyed = true;
+        this.client.close();
+        break;
+    }
+  }
 }
