@@ -1,4 +1,4 @@
-# @bit-rainforest/filmeta-client-protocols.js
+# @bitrainforest/filmeta-client-protocols.js
 
 ![standard-readme compliant](https://img.shields.io/badge/js--lotus--client--provider--browser-fork-yellow.svg?style=flat-square)
 ![standard-readme compliant](https://img.shields.io/badge/typescript-v4.5.2-green.svg?style=flat-square)
@@ -26,25 +26,25 @@ FilMeta 2.0 RPC api js client protocols. Can use Http or WebSocket.
 ### CNPM
 
 ```
-cnpm i @bit-rainforest/filmeta-client-protocols.js --save
+cnpm i @bitrainforest/filmeta-client-protocols.js --save
 ```
 
 ### NPM
 
 ```
-npm i @bit-rainforest/filmeta-client-protocols.js --save
+npm i @bitrainforest/filmeta-client-protocols.js --save
 ```
 
 ### YARN
 
 ```
-yarn add @bit-rainforest/filmeta-client-protocols.js
+yarn add @bitrainforest/filmeta-client-protocols.js
 ```
 
 ### PNPM
 
 ```
-pnpm add @bit-rainforest/filmeta-client-protocols.js
+pnpm add @bitrainforest/filmeta-client-protocols.js
 ```
 
 ## Usage
@@ -95,7 +95,7 @@ pnpm add @bit-rainforest/filmeta-client-protocols.js
 #### 初始化
 
 ```typescript
-import { Protocol } from "@bit-rainforest/filmeta-client-protocols.js";
+import { Protocol } from "@bitrainforest/filmeta-client-protocols.js";
 
 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IiIsImVtYWlsIjoiIiwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIiwiY2x1c3RlciIsInNpZ24iLCJhZG1pbiJdLCJleHBpcmVkX2F0IjoiMDAwMS0wMS0wMVQwMDowMDowMFoifQ.1GojU4WIhgQamPmwGA7szeHcJWlWYP5PE8BV-KdnW1Y"
 
@@ -200,7 +200,7 @@ protocol.send("Filecoin.ChainHead",[]).then(
 ### Typescript
 
 ```typescript
-import { Protocol, ProtocolType, JsonRpcV2Error } from "@bit-rainforest/filmeta-client-protocols.js";
+import { Protocol, ProtocolType, JsonRpcV2Error } from "@bitrainforest/filmeta-client-protocols.js";
 
 let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IiIsImVtYWlsIjoiIiwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIiwiY2x1c3RlciIsInNpZ24iLCJhZG1pbiJdLCJleHBpcmVkX2F0IjoiMDAwMS0wMS0wMVQwMDowMDowMFoifQ.1GojU4WIhgQamPmwGA7szeHcJWlWYP5PE8BV-KdnW1Y"
 
