@@ -192,7 +192,10 @@ export class WsClient {
         params: [rpcRequest.id],
       });
     }
-    return [cancel.bind(this), promise];
+    return {
+      cancel: cancel.bind(this),
+      promise,
+    };
   }
 
   close(code: number) {

@@ -85,12 +85,16 @@ export class Protocol {
         Protocol.getJsonRpcRequest(method, params),
       );
     } else {
-      return [
-        Promise,
-        Promise.reject(
-          '[filmeta-client-protocols.js-Error] Subscriptions only supported for WebSocket transport',
-        ),
-      ];
+      return {
+        cancel: () => {
+          return Promise.resolve();
+        },
+        promise: new Promise((resolve, reject) => {
+          reject(
+            '[filmeta-client-protocols.js-Error] Subscriptions only supported for WebSocket transport',
+          );
+        }),
+      };
     }
   }
 
