@@ -136,7 +136,7 @@ protocol.send("Filecoin.ChainHead",[]).then(
 #### 发送订阅事件及取消订阅
 
 ```typescript
-const {cancel, promise} = protocol.sendSubscription("Filecoin.ChainHead",[])
+const {cancel, promise} = protocol.sendSubscription("Filecoin.ChainNotify",[])
 
 // cancel()
 
